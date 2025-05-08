@@ -1,15 +1,21 @@
-import { Outlet } from "react-router-dom/dist"
-import ScrollToTop from "../components/ScrollToTop"
-import { Navbar } from "../components/Navbar"
-import { Footer } from "../components/Footer"
+// src/js/layout.js
+import React from "react";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { ContactProvider } from "../store/appContext";
+import { Contacts } from "../views/Contact";
+import { AddContact } from "../views/AddContact";
 
-// Base component that maintains the navbar and footer throughout the page and the scroll to top functionality.
 export const Layout = () => {
-    return (
-        <ScrollToTop>
-            <Navbar />
-                <Outlet />
-            <Footer />
-        </ScrollToTop>
-    )
-}
+  return (
+    <BrowserRouter>
+      <ContactProvider>
+        <Routes>
+          <Route path="/" element={<Contacts />} />
+          <Route path="/add" element={<AddContact />} />
+          <Route path="/edit/:id" element={<AddContact />} />
+          <Route render={() => <h1>Not found!</h1>} />
+        </Routes>
+      </ContactProvider>
+    </BrowserRouter>
+  );
+};

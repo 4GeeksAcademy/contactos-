@@ -1,24 +1,87 @@
-// Import necessary hooks and functions from React.
-import { useContext, useReducer, createContext } from "react";
-import storeReducer, { initialStore } from "../store"  // Import the reducer and the initial state.
+import React, { createContext, useContext, useReducer } from "react";
 
-// Create a context to hold the global state of the application
-// We will call this global state the "store" to avoid confusion while using local states
-const StoreContext = createContext()
+// Definición del estado inicial
+const initialState = {
+  contacts: [],
+  selectedContact: null
+};
 
-// Define a provider component that encapsulates the store and warps it in a context provider to 
-// broadcast the information throught all the app pages and components.
-export function StoreProvider({ children }) {
-    // Initialize reducer with the initial state.
-    const [store, dispatch] = useReducer(storeReducer, initialStore())
-    // Provide the store and dispatch method to all child components.
-    return <StoreContext.Provider value={{ store, dispatch }}>
-        {children}
-    </StoreContext.Provider>
-}
+// Creación del contexto
+export const Context = createContext(null);
 
-// Custom hook to access the global state and dispatch function.
-export default function useGlobalReducer() {
-    const { dispatch, store } = useContext(StoreContext)
-    return { dispatch, store };
-}
+// Reducer para manejar las acciones
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "SET_CONTACTS":
+      return {
+        ...state,
+        contacts: action.payload
+      };
+    case "SELECT_CONTACT":
+      return {
+        ...state,
+        selectedContact: action.payload
+      };
+    case "ADD_CONTACT":
+      return {
+        ...state,
+        contacts: [...state.contacts, action.payload]
+      };
+    case "UPDATE_CONTACT":
+      return {
+        ...state,
+        contacts: state.contacts.map(contact => 
+          contact.id === action.payload.id ? action.payload : contact
+        )
+      };
+    case "DELETE_CONTACT":
+      return {
+        ...state,
+        contacts: state.contacts.filter(contact => contact.id !== action.payload)
+      };
+    default:
+      return state;
+  }
+};
+
+// Provider component
+export const StoreProvider = ({ children }) => {
+  const [state, dispatch] = useReducer(reducer, initialState);
+  
+  const store = {
+    contacts: state.contacts,
+    selectedContact: state.selectedContact,
+    
+    // Actions
+    setContacts: (contacts) => {
+      dispatch({ type: "SET_CONTACTS", payload: contacts });
+    },
+    selectContact: (contact) => {
+      dispatch({ type: "SELECT_CONTACT", payload: contact });
+    },
+    addContact: (contact) => {
+      dispatch({ type: "ADD_CONTACT", payload: contact });
+    },
+    updateContact: (contact) => {
+      dispatch({ type: "UPDATE_CONTACT", payload: contact });
+    },
+    deleteContact: (id) => {
+      dispatch({ type: "DELETE_CONTACT", payload: id });
+    }
+  };
+
+  return (
+    <Context.Provider value={store}>
+      {children}
+    </Context.Provider>
+  );
+};
+
+// Hook para acceder al contexto
+export const useGlobalState = () => {
+  const context = useContext(Context);
+  if (context === undefined) {
+    throw new Error('useGlobalState must be used within a StoreProvider');
+  }
+  return context;
+};
